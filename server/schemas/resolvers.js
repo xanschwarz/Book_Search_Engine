@@ -38,12 +38,26 @@ const resolvers = {
       return { token, user };
     },
     // Accepts a book author's array, description, title, bookId, image, and link as parameters; returns a User type. (Look into creating what's known as an input type to handle all of these parameters!)
-    saveBook: {
-      //
+    saveBook: async (parent, args, context) => {
+      if (context.user) {
+        return User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $addToSet: { savedBooks: args } },
+          { new: true, runValidators: true }
+        );
+      }
+      throw new AuthenticationError('Error, unable to save book!');
     },
     // Accepts a book's bookId as a parameter; returns a User type.
-    removeBook: {
-      //
+    removeBook: async (parent, { bookId }, context) => {
+      if (context.user) {
+        return User.findOneAndUpdate(
+          { _id: context.user._id },
+          { $pull: { savedBooks: { bookId } } },
+          { new: true }
+        );
+      }
+      throw new AuthenticationError('Error, unable to remove book!');
     },
   },
 };
